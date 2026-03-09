@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proccessment-events-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proccessment-events-system
+  template:
+    metadata:
+      labels:
+        app: proccessment-events-system
+    spec:
+      containers:
+      - name: proccessment-events-system
+        image: proccessment-events-system:1.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:postgres@db:5432/events_db"
