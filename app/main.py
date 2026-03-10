@@ -1,9 +1,17 @@
+import time
 from fastapi import FastAPI
-from .routes import events
 from .database import Base, engine
+
+from . import models
+from .routes import events
 
 app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
+@app.on_event("startup")
+def startup():
+    from .models import Notification
+
+    Base.metadata.create_all(bind=engine)
+
 
 app.include_router(events.router)

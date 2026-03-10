@@ -1,53 +1,43 @@
 import time
-
-from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy.exc import ProgrammingError
+from .database import SessionLocal
+from .models import Notification
 
-from app.database import SessionLocal
-from app.models import Notification
-
-
-def process_notification(notification):
-    print("Processing notification:", notification.id)
-
-    time.sleep(2)
-
-    notification.status = "done"
+from .database import Base, engine
 
 
 def run_worker():
+    Base.metadata.create_all(bind=engine)
 
     while True:
-
-        db: Session = SessionLocal()
-
         try:
+            db = SessionLocal()
 
             stmt = (
                 select(Notification)
                 .where(Notification.status == "pending")
+                .order_by(Notification.created_at)
                 .limit(10)
             )
 
             notifications = db.execute(stmt).scalars().all()
 
-            if not notifications:
-                time.sleep(5)
-                continue
-
             for notification in notifications:
+                print(f"Processing notification {notification.id}")
+                notification.status = "done"
 
-                notification.status = "processing"
-
-                db.commit()
-
-                process_notification(notification)
-
-                db.commit()
-
-        finally:
+            db.commit()
             db.close()
+
+        except ProgrammingError:
+            print("Table not ready yet, retrying...")
+            time.sleep(3)
+            continue
+
+        time.sleep(5)
 
 
 if __name__ == "__main__":
+    print("Worker started")
     run_worker()

@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
-from app.models import Event
+from app.models import Event, Notification
 from app.schemas import EventCreate
 from app.service.events_service import EventService
-from ..models import Event, Notification
 
 router = APIRouter()
 

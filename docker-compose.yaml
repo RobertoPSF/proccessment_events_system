@@ -1,19 +1,20 @@
-version: "3"
-
 services:
 
   api:
     build: .
+    image: event-system
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   worker:
-    build: .
+    image: event-system
     command: python -m app.worker
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:15
@@ -23,3 +24,9 @@ services:
       POSTGRES_DB: events_db
     ports:
       - "5432:5432"
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
