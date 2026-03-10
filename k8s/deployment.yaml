@@ -12,6 +12,13 @@ spec:
       labels:
         app: proccessment-events-system
     spec:
+      initContainers:
+      - name: migrate
+        image: proccessment-events-system:1.0
+        command: ["sh","-c","alembic upgrade head"]
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://postgres:postgres@postgres-service:5432/events_db"
       containers:
       - name: proccessment-events-system
         image: proccessment-events-system:1.0
@@ -19,4 +26,4 @@ spec:
         - containerPort: 8080
         env:
         - name: DATABASE_URL
-          value: "postgresql://postgres:postgres@db:5432/events_db"
+          value: "postgresql://postgres:postgres@postgres-service:5432/events_db"

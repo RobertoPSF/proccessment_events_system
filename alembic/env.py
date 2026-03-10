@@ -11,7 +11,13 @@ from sqlalchemy import pool
 
 from alembic import context
 
+config = context.config
+
 sys.path.append(os.getcwd())
+
+DATABASE_URL = os.environ["DATABASE_URL"]
+if DATABASE_URL:
+    config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
