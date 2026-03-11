@@ -7,11 +7,11 @@ from .routes import events
 
 app = FastAPI()
 
-@app.on_event("startup")
-def startup():
-    from .models import Notification, Event
+# @app.on_event("startup")
+# def startup():
+#     from .models import Notification, Event
 
-    Base.metadata.create_all(bind=engine)
+#     Base.metadata.create_all(bind=engine)
 
 
 app.include_router(events.router)
