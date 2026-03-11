@@ -12,6 +12,7 @@ services:
       - .env
 
   worker:
+    build: .
     image: event-system
     command: python -m app.worker
     depends_on:

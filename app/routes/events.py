@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import Event, Notification
 from app.schemas import EventCreate
-from app.service.events_service import EventService
+from app.service.event_service import EventService
 
 router = APIRouter()
 

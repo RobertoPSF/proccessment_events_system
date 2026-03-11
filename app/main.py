@@ -9,7 +9,7 @@ app = FastAPI()
 
 @app.on_event("startup")
 def startup():
-    from .models import Notification
+    from .models import Notification, Event
 
     Base.metadata.create_all(bind=engine)
 
