@@ -6,18 +6,22 @@ from app.models import Notification
 class NotificationService:
 
     @staticmethod
-    def create_notification(
+    def create_notification_batch(
         db: Session,
         event_id,
-        payload: dict
+        notifications_payload: list[dict]
     ):
         
-        notification = Notification(
-            event_id = event_id,
-            payload = payload,
-            status = "pending"
-        )
+        notifications = [
+            Notification(
+                event_id=event_id,
+                payload=payload,
+                status="pending"
+            )
+            for payload in notifications_payload
+        ]
 
-        db.add(notification)
+        db.add_all(notifications)
 
-        return notification
+        return notifications
+    

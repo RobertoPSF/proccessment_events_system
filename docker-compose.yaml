@@ -41,3 +41,13 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db

@@ -23,10 +23,15 @@ class EventService:
             db.add(event)
             db.flush()
 
-            NotificationService.create_notification(
+            notifications_payload = [
+                {"type": "email", "data": payload},
+                {"type": "audit_log", "data": payload}
+            ]
+
+            NotificationService.create_notification_batch(
                 db=db,
                 event_id=event.id,
-                payload=payload
+                notifications_payload=notifications_payload
             )
 
         return event
