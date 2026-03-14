@@ -3,7 +3,6 @@ from sqlalchemy import select
 
 from app.database import SessionLocal
 from app.models import Notification
-from app.init_db import init
 
 
 def process_notification(notification_id):

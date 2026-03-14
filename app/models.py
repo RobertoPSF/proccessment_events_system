@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, String, DateTime
+from sqlalchemy import Column, ForeignKey, String, DateTime, Integer
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 import uuid
@@ -35,3 +35,10 @@ class Notification(Base):
     )
 
     processed_at = Column(DateTime(timezone=True))
+
+
+class NotificationCounter(Base):
+    __tablename__ = "notification_counters"
+
+    user_id = Column(Integer, primary_key=True)
+    unread_count = Column(Integer, default=0)

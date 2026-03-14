@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.models import Event
-from app.service.notification_service import NotificationService
+from app.services.notification_service import NotificationService
 
 
 class EventService:

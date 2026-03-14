@@ -27,7 +27,7 @@ def send_request(_):
     try:
         r = requests.post(URL, json=body)
 
-        print(r.status_code)
+        print(r.json())
 
     except Exception as e:
         print("error:", e)
