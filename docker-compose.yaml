@@ -38,6 +38,8 @@ services:
   worker:
     image: event-system
     command: python -m app.worker
+    environment:
+      PYTHONUNBUFFERED: "1"
     depends_on:
       migrate:
         condition: service_completed_successfully

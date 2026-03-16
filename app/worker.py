@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from sqlalchemy import select
 
 from app.database import SessionLocal
@@ -48,6 +49,7 @@ def mark_done(notification_id):
             notification = db.get(Notification, notification_id)
 
             notification.status = "done"
+            notification.processed_at = datetime.now()
 
     finally:
         db.close()
@@ -71,5 +73,4 @@ def run_worker():
 
 
 if __name__ == "__main__":
-    #init()
     run_worker()

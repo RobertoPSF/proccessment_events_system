@@ -1,5 +1,13 @@
-.PHONY: build
+.PHONY: build workers stop
+
+WORKERS ?= 1
 
 build:
 	docker compose down
-	docker compose up --build
+	docker compose up --build --scale worker=$(WORKERS)
+
+workers:
+	docker compose up --scale worker=$(WORKERS)
+
+stop:
+	docker compose down
