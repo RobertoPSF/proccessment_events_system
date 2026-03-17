@@ -6,6 +6,7 @@ import uuid
 from .database import Base
 
 class Event(Base):
+
     __tablename__ = "events"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -15,6 +16,7 @@ class Event(Base):
 
 
 class Notification(Base):
+
     __tablename__ = "notifications"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -26,7 +28,6 @@ class Notification(Base):
     )
 
     status = Column(String, default="pending")
-
     payload = Column(JSONB, nullable=False)
 
     created_at = Column(
@@ -35,9 +36,11 @@ class Notification(Base):
     )
 
     processed_at = Column(DateTime(timezone=True))
+    locked_at = Column(DateTime(timezone=True), nullable=True)
 
 
 class NotificationCounter(Base):
+
     __tablename__ = "notification_counters"
 
     user_id = Column(Integer, primary_key=True)

@@ -1,9 +1,17 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import select
 
 from app.database import SessionLocal
 from app.models import Notification
+
+
+BATCH_SIZE = 10
+TIMEOUT_SECONDS = 30
+
+
+def get_timeout_limit(now):
+    return now - timedelta(seconds=TIMEOUT_SECONDS)
 
 
 def process_notification(notification_id):
@@ -16,21 +24,30 @@ def fetch_notifications():
     db = SessionLocal()
 
     try:
+        now = datetime.now()
+        timeout_limit = get_timeout_limit(now)
 
         with db.begin():
 
             stmt = (
                 select(Notification)
-                .where(Notification.status == "pending")
+                .where(
+                    (Notification.status == "pending") |
+                    (
+                        (Notification.status == "processing") &
+                        (Notification.locked_at < timeout_limit)
+                    )
+                )
                 .order_by(Notification.created_at)
+                .limit(BATCH_SIZE)
                 .with_for_update(skip_locked=True)
-                .limit(limit=10)
             )
 
             notifications = db.execute(stmt).scalars().all()
 
             for notification in notifications:
                 notification.status = "processing"
+                notification.locked_at = now
 
             return [n.id for n in notifications]
 
@@ -43,13 +60,16 @@ def mark_done(notification_id):
     db = SessionLocal()
 
     try:
-
         with db.begin():
 
             notification = db.get(Notification, notification_id)
 
+            if not notification:
+                return
+
             notification.status = "done"
             notification.processed_at = datetime.now()
+            notification.locked_at = None
 
     finally:
         db.close()
@@ -66,9 +86,7 @@ def run_worker():
             continue
 
         for notification_id in ids:
-
             process_notification(notification_id)
-
             mark_done(notification_id)
 
 
