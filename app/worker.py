@@ -1,13 +1,15 @@
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 
-from app.database import SessionLocal
-from app.models import Notification
+from app.database.database import SessionLocal
+from app.database.models import Notification
+from app.utils.rate_limiter import RateLimiter
 
 
 BATCH_SIZE = 10
 TIMEOUT_SECONDS = 30
+rate_limiter = RateLimiter(rate_per_minute=600)
 
 
 def get_timeout_limit(now):
@@ -24,7 +26,8 @@ def fetch_notifications():
     db = SessionLocal()
 
     try:
-        now = datetime.now()
+        
+        now = datetime.now(timezone.utc)
         timeout_limit = get_timeout_limit(now)
 
         with db.begin():
@@ -32,7 +35,11 @@ def fetch_notifications():
             stmt = (
                 select(Notification)
                 .where(
-                    (Notification.status == "pending") |
+                    (
+                        (Notification.status == "pending") &
+                        (Notification.scheduled_at <= now)
+                    )
+                    |
                     (
                         (Notification.status == "processing") &
                         (Notification.locked_at < timeout_limit)
@@ -68,7 +75,7 @@ def mark_done(notification_id):
                 return
 
             notification.status = "done"
-            notification.processed_at = datetime.now()
+            notification.processed_at = datetime.now(timezone.utc)
             notification.locked_at = None
 
     finally:
@@ -86,6 +93,10 @@ def run_worker():
             continue
 
         for notification_id in ids:
+
+            while not rate_limiter.allow():
+                time.sleep(0.05)
+
             process_notification(notification_id)
             mark_done(notification_id)
 

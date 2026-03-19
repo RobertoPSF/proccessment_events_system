@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 
-from app.models import NotificationCounter
+from app.database.models import NotificationCounter
 
 
 class CounterService:

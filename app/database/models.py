@@ -27,7 +27,8 @@ class Notification(Base):
         nullable=False
     )
 
-    status = Column(String, default="pending")
+    status = Column(String, default="pending", index=True)
+
     payload = Column(JSONB, nullable=False)
 
     created_at = Column(
@@ -36,7 +37,16 @@ class Notification(Base):
     )
 
     processed_at = Column(DateTime(timezone=True))
+
     locked_at = Column(DateTime(timezone=True), nullable=True)
+
+    scheduled_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        index=True
+    )
+
+    retry_count = Column(Integer, default=0)
 
 
 class NotificationCounter(Base):

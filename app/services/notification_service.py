@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.dialects.postgresql import insert
 
-from app.models import Notification
+from app.database.models import Notification
 
 
 class NotificationService:
@@ -14,7 +14,7 @@ class NotificationService:
         notifications_payload: list[dict]
     ):
 
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         stmt = insert(Notification).values([
             {
@@ -22,7 +22,8 @@ class NotificationService:
                 "payload": payload,
                 "status": "pending",
                 "locked_at": None,
-                "created_at": now
+                "created_at": now,
+                "scheduled_at": now
             }
             for payload in notifications_payload
         ])

@@ -1,9 +1,7 @@
 from sqlalchemy.orm import Session
-from sqlalchemy.dialects.postgresql import insert
 
-from app.models import Event
+from app.database.models import Event
 from app.services.notification_service import NotificationService
-
 
 class EventService:
 
@@ -13,15 +11,14 @@ class EventService:
         event_type: str, 
         payload: dict
     ):
-        
         with db.begin():
 
-            stmt = insert(Event).values(
+            event = Event(
                 type=event_type,
                 payload=payload
             )
 
-            db.execute(stmt)
+            db.add(event)
             db.flush()
 
             notifications_payload = [
@@ -31,8 +28,8 @@ class EventService:
 
             NotificationService.create_notification_batch(
                 db=db,
-                event_id=stmt.returning(Event.id),
+                event_id=event.id,
                 notifications_payload=notifications_payload
             )
 
-        return stmt.returning(Event.id)
+        return event

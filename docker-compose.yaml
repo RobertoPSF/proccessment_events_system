@@ -17,7 +17,7 @@ services:
 
   migrate:
     image: event-system
-    command: python -m app.init_db
+    command: python -m app.utils.init_db
     depends_on:
       db:
         condition: service_healthy
