@@ -26,31 +26,44 @@ def fetch_notifications():
     db = SessionLocal()
 
     try:
-        
         now = datetime.now(timezone.utc)
         timeout_limit = get_timeout_limit(now)
 
         with db.begin():
 
-            stmt = (
+            pending_stmt = (
                 select(Notification)
                 .where(
-                    (
-                        (Notification.status == "pending") &
-                        (Notification.scheduled_at <= now)
-                    )
-                    |
-                    (
-                        (Notification.status == "processing") &
-                        (Notification.locked_at < timeout_limit)
-                    )
+                    Notification.status == "pending",
+                    Notification.scheduled_at <= now
                 )
                 .order_by(Notification.created_at)
                 .limit(BATCH_SIZE)
                 .with_for_update(skip_locked=True)
             )
 
-            notifications = db.execute(stmt).scalars().all()
+            pending_notifications = db.execute(pending_stmt).scalars().all()
+
+            remaining_slots = BATCH_SIZE - len(pending_notifications)
+
+            notifications = list(pending_notifications)
+
+            if remaining_slots > 0:
+
+                retry_stmt = (
+                    select(Notification)
+                    .where(
+                        Notification.status == "processing",
+                        Notification.locked_at < timeout_limit
+                    )
+                    .order_by(Notification.created_at)
+                    .limit(remaining_slots)
+                    .with_for_update(skip_locked=True)
+                )
+
+                retry_notifications = db.execute(retry_stmt).scalars().all()
+
+                notifications.extend(retry_notifications)
 
             for notification in notifications:
                 notification.status = "processing"
