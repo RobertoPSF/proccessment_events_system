@@ -1,9 +1,10 @@
-from sqlalchemy import Column, ForeignKey, String, DateTime, Integer
+from sqlalchemy import Column, ForeignKey, Index, String, DateTime, Integer, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 import uuid
 
 from .database import Base
+
 
 class Event(Base):
 
@@ -47,6 +48,26 @@ class Notification(Base):
     )
 
     retry_count = Column(Integer, default=0)
+
+    __table_args__ = (
+        Index(
+            "idx_notifications_queue",
+            "status",
+            "scheduled_at",
+            "created_at"
+        ),
+
+        Index(
+            "idx_notifications_locked",
+            "locked_at"
+        ),
+
+        Index(
+            "idx_notifications_pending",
+            "created_at",
+            postgresql_where=text("status = 'pending'")
+        ),
+    )
 
 
 class NotificationCounter(Base):
