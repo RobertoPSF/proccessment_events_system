@@ -14,7 +14,8 @@ def create_event(event: EventCreate, db: Session = Depends(get_db)):
     new_event = EventService.create_event(
         db=db,
         event_type=event.type,
-        payload=event.payload
+        payload=event.payload,
+        idempotency_key=event.idempotency_key
     )
 
     return {

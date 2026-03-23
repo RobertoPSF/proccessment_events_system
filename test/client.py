@@ -10,6 +10,8 @@ URL = "http://localhost:8000/events"
 
 def random_payload():
 
+    idempotency_key = str(uuid.uuid4())
+
     return {
         "type": "user_event",
         "payload": {
@@ -17,6 +19,7 @@ def random_payload():
             "action": random.choice(["login", "logout", "purchase"]),
             "data": "".join(random.choices(string.ascii_letters, k=10)),
         },
+        "idempotency_key": idempotency_key
     }
 
 

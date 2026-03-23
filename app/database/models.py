@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Index, String, DateTime, Integer, text
+from sqlalchemy import Column, ForeignKey, Index, String, DateTime, Integer, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 import uuid
@@ -15,12 +15,15 @@ class Event(Base):
     payload = Column(JSONB, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    idempotency_key = Column(String, unique=True, index=True, nullable=False)
+
 
 class Notification(Base):
 
     __tablename__ = "notifications"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    type = Column(String, nullable=False)
 
     event_id = Column(
         UUID(as_uuid=True),
@@ -29,7 +32,6 @@ class Notification(Base):
     )
 
     status = Column(String, default="pending", index=True)
-
     payload = Column(JSONB, nullable=False)
 
     created_at = Column(
@@ -38,7 +40,6 @@ class Notification(Base):
     )
 
     processed_at = Column(DateTime(timezone=True))
-
     locked_at = Column(DateTime(timezone=True), nullable=True)
 
     scheduled_at = Column(
@@ -48,6 +49,7 @@ class Notification(Base):
     )
 
     retry_count = Column(Integer, default=0)
+    deduplication_key = Column(String, nullable=False)
 
     __table_args__ = (
         Index(
@@ -67,6 +69,7 @@ class Notification(Base):
             "created_at",
             postgresql_where=text("status = 'pending'")
         ),
+        UniqueConstraint("event_id","deduplication_key")
     )
 
 

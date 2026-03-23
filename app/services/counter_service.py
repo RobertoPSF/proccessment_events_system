@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
+import uuid
 
 from app.database.models import NotificationCounter
 
@@ -8,7 +9,7 @@ from app.database.models import NotificationCounter
 class CounterService:
 
     @staticmethod
-    def increment_unread(db: Session, user_id: int):
+    def increment_unread(db: Session, user_id: uuid):
 
         stmt = insert(NotificationCounter).values(
             user_id=user_id,

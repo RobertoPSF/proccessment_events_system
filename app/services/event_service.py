@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import insert
 
 from app.database.models import Event
 from app.services.notification_service import NotificationService
+
 
 class EventService:
 
@@ -9,17 +11,36 @@ class EventService:
     def create_event(
         db: Session, 
         event_type: str, 
-        payload: dict
+        payload: dict,
+        idempotency_key: str
     ):
         with db.begin():
 
-            event = Event(
-                type=event_type,
-                payload=payload
+            stmt = (
+                insert(Event)
+                .values(
+                    type=event_type,
+                    payload=payload,
+                    idempotency_key=idempotency_key
+                )
+                .on_conflict_do_nothing(
+                    index_elements=["idempotency_key"]
+                )
+                .returning(Event.id)
             )
 
-            db.add(event)
-            db.flush()
+            result = db.execute(stmt)
+            event_id = result.scalar()
+
+            if not event_id:
+                event = (
+                    db.query(Event)
+                    .filter_by(idempotency_key=idempotency_key)
+                    .first()
+                )
+                event_id = event.id
+
+                return event
 
             notifications_payload = [
                 {"type": "email", "data": payload},
@@ -28,8 +49,10 @@ class EventService:
 
             NotificationService.create_notification_batch(
                 db=db,
-                event_id=event.id,
+                event_id=event_id,
                 notifications_payload=notifications_payload
             )
+
+            event = db.get(Event, event_id)
 
         return event
