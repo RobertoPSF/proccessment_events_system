@@ -50,6 +50,7 @@ class Notification(Base):
 
     retry_count = Column(Integer, default=0)
     deduplication_key = Column(String, nullable=False)
+    version = Column(Integer, default=0, nullable=False)
 
     __table_args__ = (
         Index(

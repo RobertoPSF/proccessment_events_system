@@ -1,6 +1,6 @@
 import time
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.database.database import SessionLocal
 from app.database.models import Notification
@@ -82,14 +82,20 @@ def mark_done(notification_id):
     try:
         with db.begin():
 
-            notification = db.get(Notification, notification_id)
+            stmt = (
+                update(Notification)
+                .where(
+                    Notification.id == notification_id,
+                    Notification.status == "processing"
+                )
+                .values(
+                    status="done",
+                    processed_at=datetime.now(timezone.utc),
+                    locked_at=None
+                )
+            )
 
-            if not notification:
-                return
-
-            notification.status = "done"
-            notification.processed_at = datetime.now(timezone.utc)
-            notification.locked_at = None
+            result = db.execute(stmt)
 
     finally:
         db.close()
