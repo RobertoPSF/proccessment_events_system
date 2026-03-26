@@ -27,6 +27,7 @@ class NotificationService:
                 "locked_at": None,
                 "created_at": now,
                 "scheduled_at": now,
+                "version": 0,
                 "deduplication_key": generate_hash(payload)
             }
             for payload in notifications_payload
