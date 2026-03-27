@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 import uuid
 
 from app.database.models import Notification
@@ -33,8 +34,7 @@ class NotificationService:
             for payload in notifications_payload
         ])
 
-        stmt = stmt.on_conflict_do_nothing(
-            index_elements=["event_id", "deduplication_key"]
-        )
-
-        db.execute(stmt)
+        try:
+            db.execute(stmt)
+        except IntegrityError:
+            pass
