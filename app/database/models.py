@@ -32,6 +32,7 @@ class Notification(Base):
     )
 
     status = Column(String, default="pending", index=True)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
     payload = Column(JSONB, nullable=False)
 
     created_at = Column(
@@ -53,6 +54,13 @@ class Notification(Base):
     version = Column(Integer, default=0, nullable=False)
 
     __table_args__ = (
+        Index(
+            "idx_notifications_user_status",
+            "user_id",
+            "status",
+            "scheduled_at"
+        ),
+
         Index(
             "idx_notifications_queue",
             "status",
@@ -78,5 +86,5 @@ class NotificationCounter(Base):
 
     __tablename__ = "notification_counters"
 
-    user_id = Column(Integer, primary_key=True)
+    user_id = Column(UUID(as_uuid=True), primary_key=True)
     unread_count = Column(Integer, default=0)

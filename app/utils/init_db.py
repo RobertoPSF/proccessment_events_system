@@ -77,19 +77,20 @@ def create_partitioned_notifications():
 
         conn.execute(text("""
         CREATE TABLE IF NOT EXISTS notifications (
-            id UUID NOT NULL,
-            event_id UUID NOT NULL,
-            type TEXT NOT NULL,
-            status TEXT,
-            payload JSONB,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-            processed_at TIMESTAMPTZ,
-            locked_at TIMESTAMPTZ,
-            scheduled_at TIMESTAMPTZ,
-            retry_count INT DEFAULT 0,
-            version INT DEFAULT 0,
-            deduplication_key TEXT NOT NULL
-        ) PARTITION BY RANGE (created_at);
+        id UUID NOT NULL,
+        type TEXT NOT NULL,
+        event_id UUID NOT NULL,
+        status TEXT,
+        user_id UUID NOT NULL,
+        payload JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        processed_at TIMESTAMPTZ,
+        locked_at TIMESTAMPTZ,
+        scheduled_at TIMESTAMPTZ,
+        retry_count INT DEFAULT 0,
+        deduplication_key TEXT NOT NULL,
+        version INT DEFAULT 0 NOT NULL
+    ) PARTITION BY RANGE (created_at);
         """))
 
         conn.execute(text("""
