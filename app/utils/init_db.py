@@ -21,7 +21,6 @@ def partition_name(dt: datetime):
 
 
 def create_partition(conn, dt: datetime):
-
     start, end = month_range(dt)
     name = partition_name(dt)
 
@@ -41,29 +40,16 @@ def create_partition(conn, dt: datetime):
         ON {name} (locked_at);
     """))
 
-    constraint_name = f"uq_{name}_event_dedup"
-
-    exists = conn.execute(text(f"""
-        SELECT 1
-        FROM pg_constraint
-        WHERE conname = :constraint_name
-        LIMIT 1;
-    """), {"constraint_name": constraint_name}).scalar()
-
-    if not exists:
-        conn.execute(text(f"""
-            ALTER TABLE {name}
-            ADD CONSTRAINT {constraint_name}
-            UNIQUE (event_id, deduplication_key);
-        """))
+    conn.execute(text(f"""
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_{name}_event_dedup
+        ON {name} (event_id, deduplication_key, created_at);
+    """))
 
 
 def ensure_partitions():
-
     now = datetime.now(timezone.utc)
 
     current = now
-
     next_month = (now.replace(day=28) + timedelta(days=4)).replace(day=1)
 
     with engine.begin() as conn:
@@ -72,30 +58,34 @@ def ensure_partitions():
 
 
 def create_partitioned_notifications():
-
     with engine.begin() as conn:
 
         conn.execute(text("""
-        CREATE TABLE IF NOT EXISTS notifications (
-        id UUID NOT NULL,
-        type TEXT NOT NULL,
-        event_id UUID NOT NULL,
-        status TEXT,
-        user_id UUID NOT NULL,
-        payload JSONB,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-        processed_at TIMESTAMPTZ,
-        locked_at TIMESTAMPTZ,
-        scheduled_at TIMESTAMPTZ,
-        retry_count INT DEFAULT 0,
-        deduplication_key TEXT NOT NULL,
-        version INT DEFAULT 0 NOT NULL
-    ) PARTITION BY RANGE (created_at);
+            CREATE TABLE IF NOT EXISTS notifications (
+                id UUID NOT NULL,
+                type TEXT NOT NULL,
+                event_id UUID NOT NULL,
+                status TEXT,
+                user_id UUID NOT NULL,
+                payload JSONB,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                processed_at TIMESTAMPTZ,
+                locked_at TIMESTAMPTZ,
+                scheduled_at TIMESTAMPTZ,
+                retry_count INT DEFAULT 0,
+                deduplication_key TEXT NOT NULL,
+                version INT DEFAULT 0 NOT NULL
+            ) PARTITION BY RANGE (created_at);
         """))
 
         conn.execute(text("""
-        CREATE INDEX IF NOT EXISTS idx_notifications_id
-        ON notifications (id);
+            CREATE INDEX IF NOT EXISTS idx_notifications_id
+            ON notifications (id);
+        """))
+
+        conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_notifications_event_dedup
+            ON notifications (event_id, deduplication_key, created_at);
         """))
 
     ensure_partitions()
@@ -103,10 +93,13 @@ def create_partitioned_notifications():
 
 def init():
 
-    Base.metadata.create_all(bind=engine, tables=[
-        models.Event.__table__,
-        models.NotificationCounter.__table__,
-    ])
+    Base.metadata.create_all(
+        bind=engine,
+        tables=[
+            models.Event.__table__,
+            models.NotificationCounter.__table__,
+        ]
+    )
 
     create_partitioned_notifications()
 

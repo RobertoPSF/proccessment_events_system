@@ -3,6 +3,7 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.database.models import Event
 from app.services.notification_service import NotificationService
+from app.services.fanout import FanOutService
 
 USER_NOTIFICATION_LIMIT = 50
 
@@ -44,10 +45,7 @@ class EventService:
 
             user_id = payload["user_id"]
 
-            notifications_payload = [
-                {"type": "email", "data": payload},
-                {"type": "audit_log", "data": payload}
-            ]
+            notifications_payload = FanOutService.get_targets(event_type=event_type, payload=payload)
 
             amount = len(notifications_payload)
 

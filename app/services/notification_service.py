@@ -34,10 +34,12 @@ class NotificationService:
                 "created_at": now,
                 "scheduled_at": now,
                 "version": 0,
-                "deduplication_key": generate_hash(payload)
+                "deduplication_key": generate_hash({"type": payload["type"], "user_id": payload["data"]["user_id"]})
             }
             for payload in notifications_payload
-        ])
+        ]).on_conflict_do_nothing(
+            index_elements=["event_id", "deduplication_key", "created_at"]
+        )
 
         try:
             db.execute(stmt)

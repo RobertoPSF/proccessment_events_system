@@ -77,8 +77,7 @@ class Notification(Base):
             "idx_notifications_pending",
             "created_at",
             postgresql_where=text("status = 'pending'")
-        ),
-        UniqueConstraint("event_id","deduplication_key")
+        )
     )
 
 
