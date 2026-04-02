@@ -98,6 +98,7 @@ def init():
         tables=[
             models.Event.__table__,
             models.NotificationCounter.__table__,
+            models.FailedNotification.__table__,
         ]
     )
 

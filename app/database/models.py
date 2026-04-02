@@ -87,3 +87,23 @@ class NotificationCounter(Base):
 
     user_id = Column(UUID(as_uuid=True), primary_key=True)
     unread_count = Column(Integer, default=0)
+
+
+class FailedNotification(Base):
+
+    __tablename__ = "failed_notifications"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    notification_id = Column(UUID(as_uuid=True), nullable=False)
+    event_id = Column(UUID(as_uuid=True), nullable=False)
+
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    type = Column(String, nullable=False)
+
+    payload = Column(JSONB, nullable=False)
+
+    error_message = Column(String, nullable=False)
+    failed_at = Column(DateTime(timezone=True), default=func.now())
+
+    retry_count = Column(Integer, nullable=False)
