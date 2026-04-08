@@ -38,8 +38,8 @@ def send_request(_):
 
 def main():
 
-    TOTAL_REQUESTS = 1000
-    CONCURRENCY = 20
+    TOTAL_REQUESTS = 1
+    CONCURRENCY = 1
 
     with ThreadPoolExecutor(max_workers=CONCURRENCY) as executor:
         executor.map(send_request, range(TOTAL_REQUESTS))
